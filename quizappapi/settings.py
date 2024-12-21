@@ -27,7 +27,7 @@ SECRET_KEY = 'django-insecure-j%9*^c*=ggbv5j8%fbfn0h0^#sg8mp&u4#&@$*pun%wukq4kb7
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["apiquizapp.pythonanywhere.com"]
 
 
 # Application definition
