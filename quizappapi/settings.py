@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'api',
+    'corsheaders',
     'rest_framework',
     'rest_framework_simplejwt',
 ]
@@ -48,9 +49,6 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
-    'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.IsAuthenticated',
-    )
 }
 
 SIMPLE_JWT = {
@@ -81,8 +79,9 @@ SIMPLE_JWT = {
 }
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
-    "whitenoise.middleware.WhiteNoiseMiddleware",
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -146,6 +145,16 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",
+    "https://quiz-it-two.vercel.app"
+    "http://localhost:5174",
+
+]
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    r"^https://192\.168\.1\.\d{1,3}:808\d$",
+]
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
