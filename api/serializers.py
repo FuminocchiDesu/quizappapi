@@ -152,5 +152,6 @@ class QuizAttemptSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = QuizAttempt
-        fields = ('id', 'student', 'quiz', 'score', 'total_questions',
-                 'correct_questions', 'total_points', 'max_points', 'attempt_datetime')
+        fields = ['id', 'student', 'quiz', 'score', 'total_questions',
+                 'correct_questions', 'total_points', 'max_points',
+                 'attempt_datetime', 'results']

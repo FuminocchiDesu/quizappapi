@@ -147,7 +147,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
-    "https://quiz-it-two.vercel.app"
+    "https://quiz-it-two.vercel.app",
     "http://localhost:5174",
 
 ]

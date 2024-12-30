@@ -134,8 +134,52 @@ class ClassViewSet(viewsets.ModelViewSet):
             )
         serializer.save(teacher=self.request.user)
 
-    @action(detail=False, methods=['post'])  # Changed from detail=True to detail=False
-    def join(self, request):  # Removed pk=None parameter
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+
+        # Check if this is a remove student request
+        student_id = request.data.get('remove_student')
+        if student_id:
+            # Verify the requesting user is the teacher
+            if request.user != instance.teacher:
+                return Response(
+                    {'error': 'Only the class teacher can remove students'},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+
+            try:
+                # Get the student
+                student = CustomUser.objects.get(id=student_id)
+
+                # Check if student is in the class
+                if student not in instance.students.all():
+                    return Response(
+                        {'error': 'Student is not in this class'},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+
+                # Remove the student
+                instance.students.remove(student)
+                return Response(
+                    {'message': 'Student removed successfully'},
+                    status=status.HTTP_200_OK
+                )
+            except CustomUser.DoesNotExist:
+                return Response(
+                    {'error': 'Student not found'},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+
+        # Handle regular updates
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['post'])
+    def join(self, request):
         if request.user.is_teacher:
             return Response(
                 {'error': 'Teachers cannot join classes'},
@@ -262,7 +306,8 @@ class QuizViewSet(viewsets.ModelViewSet):
             total_questions=len(questions),
             correct_questions=correct_count,
             total_points=total_points,
-            max_points=max_points
+            max_points=max_points,
+            results=results  # Add this line
         )
 
         return Response({

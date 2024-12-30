@@ -16,7 +16,7 @@ class CustomUser(AbstractUser):
         verbose_name="Profile Picture",
         default='profile_pictures/profile.png'
     )
-    # Use 'related_query_name' to avoid clash
+
     groups = models.ManyToManyField(
         Group,
         verbose_name=_('groups'),
@@ -38,11 +38,9 @@ class CustomUser(AbstractUser):
     )
 
     def save(self, *args, **kwargs):
-        # Ensure email is set
         if not self.email:
             self.email = f"{self.username}@example.com"
 
-        # Ensure a password is set
         if not self.password:
             self.set_password(self.username)
 
@@ -52,9 +50,6 @@ class CustomUser(AbstractUser):
         return self.get_full_name() or self.username
 
 class Class(models.Model):
-    """
-    Represents a class created by a teacher
-    """
     name = models.CharField(max_length=100)
     section = models.CharField(max_length=50, blank=True)  # Added section field
     teacher = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='created_classes')
@@ -67,21 +62,15 @@ class Class(models.Model):
         return self.name
 
 class QuestionBank(models.Model):
-    """
-    Data banking system for storing questions
-    """
     QUESTION_TYPES = [
         ('MC', 'Multiple Choice'),
         ('TF', 'True/False'),
         ('ID', 'Identification')
     ]
-
     teacher = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     question_text = models.TextField()
     question_type = models.CharField(max_length=2, choices=QUESTION_TYPES)
     correct_answer = models.TextField()
-
-    # For multiple choice
     option_a = models.CharField(max_length=200, blank=True, null=True)
     option_b = models.CharField(max_length=200, blank=True, null=True)
     option_c = models.CharField(max_length=200, blank=True, null=True)
@@ -92,24 +81,16 @@ class QuestionBank(models.Model):
         return f"{self.question_type}: {self.question_text[:50]}"
 
 class Quiz(models.Model):
-    """
-    Represents a quiz created by a teacher
-    """
     title = models.CharField(max_length=200)
     teacher = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     classes = models.ManyToManyField(Class, related_name='quizzes')  # Change this line
-
-    # Quiz scheduling and timer
     start_datetime = models.DateTimeField()
     end_datetime = models.DateTimeField()
     time_limit_minutes = models.IntegerField(default=30)
-
-    # Quiz configuration
     questions = models.ManyToManyField(QuestionBank)
     show_correct_answers = models.BooleanField(default=False)
 
     def is_active(self):
-        """Check if quiz is currently available"""
         now = timezone.now()
         return self.start_datetime <= now <= self.end_datetime
 
@@ -117,17 +98,15 @@ class Quiz(models.Model):
         return self.title
 
 class QuizAttempt(models.Model):
-    """
-    Tracks student attempts at a quiz
-    """
     student = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE)
     score = models.FloatField(default=0)
     total_questions = models.IntegerField()
     correct_questions = models.IntegerField(default=0)
-    total_points = models.IntegerField(default=0)  # Add total points field
-    max_points = models.IntegerField(default=0)    # Add max points field
+    total_points = models.IntegerField(default=0)
+    max_points = models.IntegerField(default=0)
     attempt_datetime = models.DateTimeField(auto_now_add=True)
+    results = models.JSONField(null=True, blank=True)
 
     def __str__(self):
         return f"{self.student.username} - {self.quiz.title}"
