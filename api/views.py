@@ -257,17 +257,56 @@ class QuizViewSet(viewsets.ModelViewSet):
         results = []
 
         for question in questions:
-            answer = str(answers.get(str(question.id)))
+            # Get raw answer and correct answer
+            raw_answer = answers.get(str(question.id), '')
+            raw_correct = question.correct_answer
 
-            # Handle multiple choice answers
+            # Convert to strings and strip whitespace
+            answer = str(raw_answer).strip()
+            correct_answer = str(raw_correct).strip()
+
+            print(f"Question {question.id} - Type: {question.question_type}")
+            print(f"Raw answer: '{raw_answer}' ({type(raw_answer)})")
+            print(f"Raw correct: '{raw_correct}' ({type(raw_correct)})")
+            print(f"Processed answer: '{answer}'")
+            print(f"Processed correct: '{correct_answer}'")
+
+            # Handle different question types
             if question.question_type == 'MC':
-                # Check if answer is the option text rather than index
+                # Check if answer is the option text
                 if answer in [question.option_a, question.option_b, question.option_c, question.option_d]:
-                    # Convert option text to index
                     options = [question.option_a, question.option_b, question.option_c, question.option_d]
                     answer = str(options.index(answer))
+                    print(f"Converted MC text answer to index: {answer}")
 
-            is_correct = answer.lower() == question.correct_answer.lower()
+                # Check if correct_answer is the option text
+                if correct_answer in [question.option_a, question.option_b, question.option_c, question.option_d]:
+                    options = [question.option_a, question.option_b, question.option_c, question.option_d]
+                    correct_answer = str(options.index(correct_answer))
+                    print(f"Converted MC correct answer to index: {correct_answer}")
+
+            elif question.question_type == 'TF':
+                # Normalize True/False answers
+                answer = answer.lower()
+                correct_answer = correct_answer.lower()
+                # Map variations to standard format
+                true_values = ['true', 't', '1', 'yes']
+                false_values = ['false', 'f', '0', 'no']
+                answer = 'true' if answer in true_values else 'false' if answer in false_values else answer
+                correct_answer = 'true' if correct_answer in true_values else 'false' if correct_answer in false_values else correct_answer
+
+            elif question.question_type == 'ID':
+                # Case-insensitive comparison for identification questions
+                answer = answer.lower()
+                correct_answer = correct_answer.lower()
+
+            # Debug print before comparison
+            print(f"Final comparison - Answer: '{answer}', Correct: '{correct_answer}'")
+
+            # Perform the comparison
+            is_correct = answer == correct_answer
+            print(f"Is correct: {is_correct}")
+
             if is_correct:
                 correct_count += 1
                 total_points += question.points
@@ -282,9 +321,13 @@ class QuizViewSet(viewsets.ModelViewSet):
                     '3': question.option_d
                 }
                 display_answer = options.get(answer, answer)
-                correct_display = options.get(question.correct_answer, question.correct_answer)
+                correct_display = options.get(correct_answer, correct_answer)
+                if not display_answer and answer in [question.option_a, question.option_b, question.option_c, question.option_d]:
+                    display_answer = answer
+                if not correct_display and correct_answer in [question.option_a, question.option_b, question.option_c, question.option_d]:
+                    correct_display = correct_answer
             else:
-                correct_display = question.correct_answer
+                correct_display = correct_answer
 
             results.append({
                 'question_id': question.id,
@@ -295,7 +338,7 @@ class QuizViewSet(viewsets.ModelViewSet):
                 'max_points': question.points
             })
 
-        # Calculate percentage score based on points
+        # Calculate percentage score
         score = (total_points / max_points) * 100 if max_points > 0 else 0
 
         # Create attempt
@@ -307,7 +350,7 @@ class QuizViewSet(viewsets.ModelViewSet):
             correct_questions=correct_count,
             total_points=total_points,
             max_points=max_points,
-            results=results  # Add this line
+            results=results
         )
 
         return Response({
