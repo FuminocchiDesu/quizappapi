@@ -149,7 +149,6 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "https://quiz-it-two.vercel.app",
     "https://quizit-nu.vercel.app",
-    "https://quiz-it-project.vercel.app",
 ]
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGIN_REGEXES = [
